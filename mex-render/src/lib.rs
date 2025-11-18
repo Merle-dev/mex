@@ -1,85 +1,60 @@
 use std::any::Any;
 
+use mex_core::Context;
 use ratatui::{buffer::Buffer, layout::Rect};
 
-pub struct Editor {
-    loaded_files: Vec<String>,
-}
+use crate::elements::explore::Explore;
 
-pub struct Context<'a> {
-    editor: &'a mut Editor,
+pub mod elements;
+
+pub enum Location {
+    Center,
+    Bottom,
+    Right,
+    Left,
+    Top,
 }
 
 pub trait Element: Any {
-    fn render(&self, buffer: &mut Buffer, area: Rect, ctx: &mut Context);
+    fn render(&self, buffer: &mut Buffer, area: Rect, ctx: &Context);
+    fn update(&self) -> bool;
     fn type_name(&self) -> &'static str {
         std::any::type_name::<Self>()
     }
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 pub struct Compositor {
-    elements: Vec<Box<dyn Element>>,
+    pub elements: Vec<Box<dyn Element>>,
+}
+
+impl Default for Compositor {
+    fn default() -> Self {
+        let mut r = Self { elements: vec![] };
+        r.add_element(Explore::new());
+        r
+    }
 }
 
 impl Compositor {
     pub fn add_element(&mut self, element: impl Element) {
         self.elements.push(Box::new(element));
     }
-    pub fn render(&self, buffer: &mut Buffer, area: Rect, ctx: &mut Context) {
+    pub fn render(&self, area: Rect, buffer: &mut Buffer, ctx: &Context) {
         self.elements
             .iter()
+            .filter(|el| el.update())
             .map(|el| el.render(buffer, area, ctx))
             .collect()
     }
+    fn position(area: Rect) {}
 }
-
 #[cfg(test)]
-mod tests {
-    use ratatui::widgets::{Block, List, Paragraph, Widget};
-
-    use crate::{Compositor, Element};
-
-    struct Input {}
-
-    struct Tree {
-        content: Vec<String>,
-    }
-
-    impl Element for Input {
-        fn render(
-            &self,
-            buffer: &mut ratatui::prelude::Buffer,
-            area: ratatui::prelude::Rect,
-            ctx: &mut crate::Context,
-        ) {
-            Paragraph::new(">   ")
-                .block(Block::bordered())
-                .render(area, buffer);
-        }
-    }
-
-    impl Element for Tree {
-        fn render(
-            &self,
-            buffer: &mut ratatui::prelude::Buffer,
-            area: ratatui::prelude::Rect,
-            ctx: &mut crate::Context,
-        ) {
-            List::new(ctx.editor.loaded_files.clone()).render(area, buffer);
-        }
-    }
+mod test {
+    use crate::{Element, elements::debug::DebugElement};
 
     #[test]
-    fn build() {
-        let tree = Tree { content: vec![] };
-        assert_eq!(tree.type_name(), "mex_render::tests::Tree");
-    }
-
-    #[test]
-    fn populate() {
-        let mut comp = Compositor { elements: vec![] };
-        comp.add_element(Tree { content: vec![] });
-        comp.add_element(Input {});
-        assert_eq!(comp.elements.len(), 1);
+    fn name() {
+        println!("{}", DebugElement { text: "" }.type_name())
     }
 }

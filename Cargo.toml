@@ -1,6 +1,6 @@
 [workspace]
 members = ["mex-*"]
-default-members = ["mex-core"]
+default-members = ["mex-start"]
 resolver = "3"
 
 [workspace.dependencies]

@@ -557,7 +557,19 @@ dependencies = [
 name = "mex-render"
 version = "0.1.0"
 dependencies = [
+ "mex-core",
  "ratatui",
+]
+
+[[package]]
+name = "mex-start"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "mex-core",
+ "mex-render",
+ "ratatui",
+ "smol",
 ]
 
 [[package]]
