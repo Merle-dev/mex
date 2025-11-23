@@ -1,30 +1,25 @@
-use std::fmt::Debug;
-
-use ratatui::widgets::{Paragraph, Widget};
+use ratatui::widgets::{List, ListItem, Widget};
 
 use crate::Element;
 
-pub struct DebugElement<T: Debug> {
-    pub text: T,
-}
-
-impl<T: Debug> DebugElement<T> {
-    pub fn new(a: T) -> Self {
-        Self { text: a }
+pub struct Buffer {}
+impl Buffer {
+    pub fn new(file: Option<String>) -> Self {
+        Self {}
     }
 }
 
-impl<T: Debug + 'static> Element for DebugElement<T> {
+impl Element for Buffer {
     fn render(
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
         ctx: &mex_core::Context,
     ) {
-        Paragraph::new(format!("{:?}", self.text)).render(area, buffer);
+        List::new((0..15).map(|i| ListItem::new(format!("{i}")))).render(area, buffer);
     }
     fn captures_input(&self) -> bool {
-        false
+        true
     }
     fn is_visible(&self) -> bool {
         true

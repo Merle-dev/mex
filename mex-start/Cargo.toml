@@ -9,3 +9,5 @@ smol = "2.0.2"
 ratatui.workspace = true
 mex-render = { path = "../mex-render/" }
 mex-core = { path = "../mex-core/" }
+rayon.workspace = true
+anyhow.workspace = true

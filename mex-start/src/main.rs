@@ -1,12 +1,19 @@
-use std::{
-    thread::sleep,
-    time::{Duration, Instant},
-};
+use std::time::Duration;
 
-use futures::{StreamExt, stream::FuturesUnordered};
+use anyhow::Result;
+use futures::stream::FuturesUnordered;
 use mex_core::{Callback, Context, Editor, Jobs, Mode};
-use mex_render::{Compositor, Element, elements::debug::DebugElement};
-use ratatui::{DefaultTerminal, Frame, init};
+use mex_render::{
+    Compositor, CompositorLayout, Location,
+    elements::{buffer::Buffer, explore::Explore, footer::Footer},
+};
+use ratatui::{
+    DefaultTerminal, Frame,
+    crossterm::event::{self, Event, KeyCode},
+    init,
+    layout::{Constraint, Rect},
+    restore,
+};
 
 struct App {
     jobs: Jobs,
@@ -32,43 +39,58 @@ impl App {
     }
 }
 
-fn main() {
-    let mut app = App::new().unwrap();
-    // let call = Box::pin(async {
-    //     let cb: Callback = Box::new(|ctx: &mut Context| {
-    //         pr
-    //     });
-    //     Some(cb)
-    // });
-    // app.jobs.list.push(call);
-    app.compositor
-        .add_element(DebugElement::new((false, 0u128)));
+impl Drop for App {
+    fn drop(&mut self) {
+        restore();
+    }
+}
 
-    let mut now = Instant::now();
-    let mut dt = now.elapsed().as_nanos();
+fn main() -> Result<()> {
+    let mut app = App::new().unwrap();
+
+    app.compositor.add_element(Footer::new(), |ide, layout| {
+        layout.push(Constraint::Length(1), ide);
+    });
+    app.compositor.add_element(Explore::new(), |ide, layout| {
+        layout.push(Constraint::Fill(1), ide);
+    });
+    app.compositor.add_element(Footer::new(), |ide, layout| {
+        layout.push(Constraint::Length(1), ide);
+    });
+    app.compositor.add_element(Explore::new(), |ide, layout| {
+        layout.push(Location::Center((5, 6), (9, 10)), ide);
+    });
+
     while !app.editor.exit {
-        let result: Option<Callback> =
-            smol::block_on(async { app.jobs.list.next().await.flatten() });
-        let mut ctx = Context {
+        if event::poll(Duration::from_millis(250))? {
+            match event::read()? {
+                Event::Key(key_event) => {
+                    if key_event.code == KeyCode::Enter {
+                        app.editor.exit = true;
+                    }
+                    app.compositor
+                        .last_focused_element
+                        .iter()
+                        .rfind(|id| {
+                            app.compositor
+                                .elements
+                                .get(*id)
+                                .is_some_and(|(element, _)| element.is_visible())
+                        })
+                        .and_then(|id| app.compositor.elements.get_mut(id))
+                        .map(|(element, _)| element.capture_input(key_event));
+                }
+                Event::Resize(width, height) => {
+                    app.compositor
+                        .calculate_areas(Rect::new(0, 0, width, height));
+                }
+
+                _ => {}
+            }
+        }
+        let ctx = Context {
             editor: &mut app.editor,
         };
-
-        app.compositor
-            .elements
-            .iter_mut()
-            .find(|element| {
-                element.type_name() == std::any::type_name::<DebugElement<(bool, u128)>>()
-            })
-            .and_then(|mut_ref| {
-                mut_ref
-                    .as_any_mut()
-                    .downcast_mut::<DebugElement<(bool, u128)>>()
-            })
-            .map(|element| element.text = (result.is_some(), dt));
-
-        result.map(|callback| {
-            callback(&mut ctx);
-        });
         let _ = app
             .terminal
             .draw(|frame: &mut Frame| {
@@ -76,7 +98,6 @@ fn main() {
                     .render(frame.area(), frame.buffer_mut(), &ctx)
             })
             .map_err(|e| eprintln!("{}", e));
-        dt = now.elapsed().as_nanos();
-        now = Instant::now();
     }
+    Ok(())
 }

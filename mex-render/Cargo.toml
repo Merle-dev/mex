@@ -5,4 +5,9 @@ edition = "2024"
 
 [dependencies]
 ratatui.workspace = true
+rayon.workspace = true
 mex-core = { path = "../mex-core/"}
+ignore = "0.4.25"
+regex = "1.12.2"
+anyhow.workspace = true
+indexmap = "2.12.1"
