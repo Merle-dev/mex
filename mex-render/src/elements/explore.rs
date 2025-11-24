@@ -15,7 +15,6 @@ pub struct Explore {
 }
 
 use ignore::{DirEntry, WalkBuilder, WalkState};
-use regex::Regex;
 use std::{path::Path, sync::mpsc};
 
 impl Element for Explore {
@@ -95,7 +94,6 @@ impl Explore {
         if self.query.is_empty() {
             return Ok(vec![]);
         }
-        let regex = Regex::new(&self.query)?;
         let (tx, rx) = mpsc::channel();
 
         let walker = WalkBuilder::new(path)
@@ -105,25 +103,32 @@ impl Explore {
 
         walker.run(|| {
             let tx = tx.clone();
-            let regex = regex.clone();
+            // let regex = regex.clone();
             Box::new(move |result| {
                 let entry = match result {
                     Ok(entry) => entry,
                     Err(_) => return WalkState::Continue,
                 };
-
-                if entry.file_type().map_or(false, |ft| ft.is_file()) {
-                    if let Ok(content) = std::fs::read_to_string(entry.path()) {
-                        for (line_num, line) in content.lines().enumerate() {
-                            if regex.is_match(line) {
-                                let result = (entry.clone(), line_num + 1, line.trim().to_string());
-                                if tx.send(result).is_err() {
-                                    return WalkState::Quit;
-                                }
-                            }
-                        }
+                if entry.file_type().is_some_and(|a| {
+                    a.is_file() && entry.file_name().to_string_lossy().contains(&self.query)
+                }) {
+                    if tx.send((entry, 0, "".to_string())).is_err() {
+                        return WalkState::Quit;
                     }
                 }
+
+                // if entry.file_type().is_some_and(|ft| ft.is_file()) {
+                //     if let Ok(content) = std::fs::read_to_string(entry.path()) {
+                //         for (line_num, line) in content.lines().enumerate() {
+                //             if regex.is_match(line) {
+                //                 let result = (entry.clone(), line_num + 1, line.trim().to_string());
+                //                 if tx.send(result).is_err() {
+                //                     return WalkState::Quit;
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
 
                 WalkState::Continue
             })

@@ -1,7 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
 use indexmap::IndexMap;
-use mex_core::Context;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::KeyEvent,

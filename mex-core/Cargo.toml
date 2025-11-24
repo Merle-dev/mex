@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 futures = "0.3.31"
+ratatui.workspace = true
 smol = "2.0.2"

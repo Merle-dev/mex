@@ -1,45 +1,25 @@
 use futures::{future::BoxFuture, stream::FuturesUnordered};
+use mex_core::Mode;
+use mex_keys::keymap::KeyMap;
 
-struct Context {}
-
-type JobFuture = BoxFuture<'static, Option<Callback>>;
-
-type Callback = Box<dyn Fn(&mut Context)>;
-
-struct Jobs {
-    threads: FuturesUnordered<JobFuture>,
+pub struct Settings {
+    key_map: KeyMap,
 }
 
-impl Jobs {
-    pub fn new() -> Self {
-        Self {
-            threads: FuturesUnordered::new(),
-        }
-    }
-    pub fn spawn(&mut self, func: JobFuture) {
-        self.threads.push(func);
-    }
+pub struct Editor {
+    pub loaded_files: Vec<String>,
+    pub settings: Settings,
+    pub mode: Mode,
+    pub exit: bool,
 }
 
-struct App {
-    jobs: Jobs,
+pub struct Context<'a> {
+    pub editor: &'a mut Editor,
 }
 
-#[cfg(test)]
-mod tests {
-    use smol::future::FutureExt;
-    async fn async_fun(opt: Option<Callback>) -> Option<Callback> {
-        opt
-    }
-    use crate::{Callback, Context, JobFuture, Jobs};
-    fn create<F: Future<Output = Option<Callback>> + Send + 'static>(f: F) {
-        let mut jobs = Jobs::new();
-        jobs.spawn(f.boxed());
-    }
-    fn poll() {
-        loop {
-            let mut jobs = Jobs::new();
-            jobs.spawn(async_fun(None).boxed());
-        }
-    }
+pub type Callback = Box<dyn FnOnce(&mut Context) + Send>;
+pub type Job = BoxFuture<'static, Option<Callback>>;
+
+pub struct Jobs {
+    pub list: FuturesUnordered<Job>,
 }

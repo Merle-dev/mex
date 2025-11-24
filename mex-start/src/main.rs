@@ -51,26 +51,16 @@ fn main() -> Result<()> {
     app.compositor.add_element(Footer::new(), |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
-    app.compositor.add_element(Explore::new(), |ide, layout| {
-        layout.push(Constraint::Fill(1), ide);
-    });
+    app.compositor
+        .add_element(Buffer::new(None), |ide, layout| {
+            layout.push(Constraint::Fill(1), ide);
+        });
     app.compositor.add_element(Footer::new(), |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
     app.compositor.add_element(Explore::new(), |ide, layout| {
         layout.push(Location::Center((5, 6), (9, 10)), ide);
     });
-    app.compositor
-        .add_element(Buffer::new(None), |ide, layout| {
-            let old_layout = layout.clone();
-            let mut new_layout = CompositorLayout::new(ratatui::layout::Direction::Horizontal);
-            new_layout.push(
-                Constraint::Fill(1),
-                CompositorLayoutArea::CompositorLayout(old_layout),
-            );
-            new_layout.push(Constraint::Fill(1), ide);
-            *layout = new_layout;
-        });
 
     while !app.editor.exit {
         if event::poll(Duration::from_millis(250))? {

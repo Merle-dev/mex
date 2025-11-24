@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use futures::{future::BoxFuture, stream::FuturesUnordered};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub enum Mode {
     Normal,
     Insert,
@@ -17,21 +17,4 @@ impl Display for Mode {
             Mode::Select => f.write_str("select"),
         }
     }
-}
-
-pub struct Editor {
-    pub loaded_files: Vec<String>,
-    pub mode: Mode,
-    pub exit: bool,
-}
-
-pub struct Context<'a> {
-    pub editor: &'a mut Editor,
-}
-
-pub type Callback = Box<dyn FnOnce(&mut Context) + Send>;
-pub type Job = BoxFuture<'static, Option<Callback>>;
-
-pub struct Jobs {
-    pub list: FuturesUnordered<Job>,
 }
