@@ -19,7 +19,7 @@ impl Element for Buffer {
         List::new((0..15).map(|i| ListItem::new(format!("{i}")))).render(area, buffer);
     }
     fn captures_input(&self) -> bool {
-        true
+        false
     }
     fn is_visible(&self) -> bool {
         true

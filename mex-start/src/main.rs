@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use anyhow::Result;
 use futures::stream::FuturesUnordered;
-use mex_core::{Callback, Context, Editor, Jobs, Mode};
+use mex_core::{Context, Editor, Jobs, Mode};
 use mex_render::{
-    Compositor, CompositorLayout, Location,
+    Compositor, CompositorLayout, CompositorLayoutArea, Location,
     elements::{buffer::Buffer, explore::Explore, footer::Footer},
 };
 use ratatui::{
@@ -60,6 +60,17 @@ fn main() -> Result<()> {
     app.compositor.add_element(Explore::new(), |ide, layout| {
         layout.push(Location::Center((5, 6), (9, 10)), ide);
     });
+    app.compositor
+        .add_element(Buffer::new(None), |ide, layout| {
+            let old_layout = layout.clone();
+            let mut new_layout = CompositorLayout::new(ratatui::layout::Direction::Horizontal);
+            new_layout.push(
+                Constraint::Fill(1),
+                CompositorLayoutArea::CompositorLayout(old_layout),
+            );
+            new_layout.push(Constraint::Fill(1), ide);
+            *layout = new_layout;
+        });
 
     while !app.editor.exit {
         if event::poll(Duration::from_millis(250))? {
@@ -71,11 +82,10 @@ fn main() -> Result<()> {
                     app.compositor
                         .last_focused_element
                         .iter()
-                        .rfind(|id| {
+                        .rfind(|&id| {
                             app.compositor
-                                .elements
-                                .get(*id)
-                                .is_some_and(|(element, _)| element.is_visible())
+                                .get(id)
+                                .is_some_and(|element| element.is_visible())
                         })
                         .and_then(|id| app.compositor.elements.get_mut(id))
                         .map(|(element, _)| element.capture_input(key_event));

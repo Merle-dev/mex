@@ -182,6 +182,18 @@ impl Compositor {
         );
         self.next_id.0 += 1;
     }
+    pub fn get(
+        &self,
+        id: &CompositorElementId,
+    ) -> Option<&Box<dyn Element + Send + Sync + 'static>> {
+        self.elements.get(id).map(|(e, _)| e)
+    }
+    pub fn get_mut(
+        &mut self,
+        id: &CompositorElementId,
+    ) -> Option<&mut Box<dyn Element + Send + Sync + 'static>> {
+        self.elements.get_mut(id).map(|(e, _)| e)
+    }
     pub fn render(&mut self, area: Rect, buffer: &mut Buffer, ctx: &Context) {
         let updates: Vec<(&Box<dyn Element + Sync + Send>, bool)> = self
             .elements
