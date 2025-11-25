@@ -1,46 +1,80 @@
-use std::{collections::HashMap, sync::mpsc::Sender, thread};
+use std::{collections::HashMap, rc::Rc};
 
 use anyhow::{Result, anyhow};
 use mex_core::Mode;
-use ratatui::crossterm::event::{self, KeyCode};
+use ratatui::crossterm::event::KeyCode;
 
-use crate::keymap::{KeyBranch, KeyOption, get_unsafe};
-pub use keymap::KeyMap;
+use crate::keymap::KeyOption;
 
 mod key_operations;
 mod keymap;
+pub use keymap::{KeyBranch, KeyMap};
 
-fn run<'b, 'a: 'b>(
-    keytree: &'a KeyMap,
-    keytree_ref: &'b HashMap<KeyOption, KeyBranch>,
-    mode: &mut Mode,
-) -> Result<&'a HashMap<KeyOption, KeyBranch>> {
-    Ok(match event::read()? {
-        event::Event::Key(key) => compute_key(sender, keytree, keytree_ref, key.code, mode)?,
-        _ => keytree_ref,
-    })
+pub struct KeyMapWrapper {
+    base: KeyMap,
+    current: HashMap<KeyOption, KeyBranch>, /* Would be better a reference but to complicated and performance is negitable */
+    stored_nums: Vec<u8>,
 }
 
-fn compute_key<'a>(
-    keytree: &'a KeyMap,
-    keytree_ref: &'a HashMap<KeyOption, KeyBranch>,
-    keycode: KeyCode,
-    mode: &Mode,
-) -> Result<&'a HashMap<KeyOption, KeyBranch>> {
-    let t = match keytree_ref.get(&KeyOption::Specific(keycode)) {
-        Some(KeyBranch::Command(cmd)) => keytree
+impl KeyMapWrapper {
+    pub fn new(path: &str) -> Result<Self> {
+        let base = KeyMap::from_config(path)?;
+        let current = base
             .0
-            .get(mode)
-            .ok_or(anyhow!("No Such Mode"))
-            .map(get_unsafe),
-        Some(KeyBranch::Branches(branch)) => Ok(branch),
-        None => keytree
+            .get(&Mode::Normal)
+            .cloned()
+            .and_then(|branch| match branch {
+                KeyBranch::Branches(hm) => Some(hm),
+                KeyBranch::Command(_) => None,
+            })
+            .ok_or(anyhow!("Somehow there are no normal mode implementation"))?;
+        Ok(Self {
+            base,
+            current,
+            stored_nums: vec![],
+        })
+    }
+    fn return_to_base(&mut self) -> Result<()> {
+        self.current = self
+            .base
             .0
-            .get(mode)
-            .map(get_unsafe)
-            .ok_or(anyhow!("No Such Mode")),
-    };
-    t
+            .get(&Mode::Normal)
+            .and_then(|branch| match branch {
+                KeyBranch::Branches(hm) => Some(hm),
+                KeyBranch::Command(_) => None,
+            })
+            .cloned()
+            .ok_or(anyhow!("Somehow there are no normal mode implementation"))?;
+        Ok(())
+    }
+    fn after_care(&mut self, branch: &KeyBranch) -> Result<()> {
+        match branch {
+            KeyBranch::Branches(new_hm) => self.current = new_hm.clone(),
+            KeyBranch::Command(_) => self.return_to_base()?,
+        };
+        Ok(())
+    }
+    pub fn compute_key(&mut self, key: KeyCode) -> Result<Option<(KeyBranch, Rc<[u8]>)>> {
+        if let Some(branch) = match key {
+            KeyCode::Char(char) if (48..=57).contains(&(char as u8)) => {
+                self.current.get(&KeyOption::Num).map(|branch| {
+                    self.stored_nums.push(char as u8 - 48);
+                    branch
+                })
+            }
+            other => self.current.get(&KeyOption::Specific(other)),
+        }
+        .cloned()
+        {
+            self.after_care(&branch)?;
+            Ok(Some((
+                branch,
+                Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice()),
+            )))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 #[cfg(test)]

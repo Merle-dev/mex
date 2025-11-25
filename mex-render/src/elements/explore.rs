@@ -1,4 +1,5 @@
 use anyhow::Result;
+use mex_app::Context;
 use ratatui::{
     crossterm::event::KeyCode,
     layout::{Constraint, Layout},
@@ -22,7 +23,7 @@ impl Element for Explore {
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
-        ctx: &crate::Context,
+        ctx: &mut mex_app::Context,
     ) {
         Clear::default().render(area, buffer);
         let [left, display_area] =
@@ -60,7 +61,7 @@ impl Element for Explore {
     fn captures_input(&self) -> bool {
         true
     }
-    fn capture_input(&mut self, event: ratatui::crossterm::event::KeyEvent) {
+    fn capture_input(&mut self, event: ratatui::crossterm::event::KeyEvent, _ctx: &mut Context) {
         match event.code {
             KeyCode::Char(key) => {
                 self.query.push(key);

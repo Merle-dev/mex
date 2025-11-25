@@ -9,6 +9,7 @@ smol = "2.0.2"
 ratatui.workspace = true
 mex-render.workspace = true
 mex-core.workspace = true
+mex-app.workspace = true
 rayon.workspace = true
 anyhow.workspace = true
 toml.workspace = true

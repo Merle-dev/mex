@@ -67,10 +67,15 @@ impl KeyMap {
         let config_hashmap: HashMap<String, CommandConfig> =
             from_str(&std::fs::read_to_string(path)?)?;
 
-        let mut hm: HashMap<char, KeyBranch> = HashMap::new();
+        let mut hm: HashMap<Mode, KeyBranch> = HashMap::new();
         for (command, config) in config_hashmap.iter() {
             let key_seq = &Self::seperate(config.keys.clone());
-            for mode in config.mode.split_whitespace().collect::<String>().chars() {
+            for mode_char in config.mode.split_whitespace().collect::<String>().chars() {
+                let mode = match mode_char {
+                    'i' => Mode::Insert,
+                    's' => Mode::Select,
+                    _ => Mode::Normal,
+                };
                 hm.get_mut(&mode)
                     .map(|kb| *kb = add_kb(kb.clone(), &key_seq, command.to_string()))
                     .or_else(|| {

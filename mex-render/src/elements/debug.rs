@@ -19,7 +19,7 @@ impl<T: Debug + 'static> Element for DebugElement<T> {
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
-        ctx: &mex_core::Context,
+        ctx: &mut mex_app::Context,
     ) {
         Paragraph::new(format!("{:?}", self.text)).render(area, buffer);
     }

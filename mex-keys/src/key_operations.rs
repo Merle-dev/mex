@@ -1,4 +1,4 @@
-use crossterm::event::KeyCode;
+use ratatui::crossterm::event::{KeyCode, MediaKeyCode, ModifierKeyCode};
 
 use crate::keymap::KeyOption;
 
@@ -45,88 +45,72 @@ pub fn to_key(key_str: String) -> Option<KeyOption> {
         "f12" => Some(KeyOption::Specific(KeyCode::F(12))),
 
         // Media keys
-        "play" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Play,
-        ))),
-        "pause_media" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Pause,
-        ))),
-        "playpause" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::PlayPause,
-        ))),
-        "reverse" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Reverse,
-        ))),
-        "stop" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Stop,
-        ))),
+        "play" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Play))),
+        "pause_media" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Pause))),
+        "playpause" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::PlayPause))),
+        "reverse" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Reverse))),
+        "stop" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Stop))),
         "fastforward" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::FastForward,
+            MediaKeyCode::FastForward,
         ))),
-        "rewind" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Rewind,
-        ))),
-        "tracknext" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::TrackNext,
-        ))),
+        "rewind" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Rewind))),
+        "tracknext" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::TrackNext))),
         "trackprevious" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::TrackPrevious,
+            MediaKeyCode::TrackPrevious,
         ))),
-        "record" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::Record,
-        ))),
+        "record" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Record))),
         "lowervolume" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::LowerVolume,
+            MediaKeyCode::LowerVolume,
         ))),
         "raisevolume" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::RaiseVolume,
+            MediaKeyCode::RaiseVolume,
         ))),
         "mutevolume" => Some(KeyOption::Specific(KeyCode::Media(
-            crossterm::event::MediaKeyCode::MuteVolume,
+            MediaKeyCode::MuteVolume,
         ))),
 
         // Modifier keys
         "leftshift" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftShift,
+            ModifierKeyCode::LeftShift,
         ))),
         "leftcontrol" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftControl,
+            ModifierKeyCode::LeftControl,
         ))),
         "leftalt" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftAlt,
+            ModifierKeyCode::LeftAlt,
         ))),
         "leftsuper" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftSuper,
+            ModifierKeyCode::LeftSuper,
         ))),
         "lefthyper" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftHyper,
+            ModifierKeyCode::LeftHyper,
         ))),
         "leftmeta" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::LeftMeta,
+            ModifierKeyCode::LeftMeta,
         ))),
         "rightshift" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightShift,
+            ModifierKeyCode::RightShift,
         ))),
         "rightcontrol" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightControl,
+            ModifierKeyCode::RightControl,
         ))),
         "rightalt" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightAlt,
+            ModifierKeyCode::RightAlt,
         ))),
         "rightsuper" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightSuper,
+            ModifierKeyCode::RightSuper,
         ))),
         "righthyper" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightHyper,
+            ModifierKeyCode::RightHyper,
         ))),
         "rightmeta" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::RightMeta,
+            ModifierKeyCode::RightMeta,
         ))),
         "isoLevel3Shift" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::IsoLevel3Shift,
+            ModifierKeyCode::IsoLevel3Shift,
         ))),
         "isoLevel5Shift" => Some(KeyOption::Specific(KeyCode::Modifier(
-            crossterm::event::ModifierKeyCode::IsoLevel5Shift,
+            ModifierKeyCode::IsoLevel5Shift,
         ))),
         s if s.len() == 1 => Some(KeyOption::Specific(KeyCode::Char(
             s.chars().next().unwrap(),

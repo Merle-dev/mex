@@ -1,25 +1,31 @@
-use futures::{future::BoxFuture, stream::FuturesUnordered};
+use anyhow::Result;
 use mex_core::Mode;
-use mex_keys::keymap::KeyMap;
+use mex_keys::KeyMapWrapper;
 
-pub struct Settings {
-    key_map: KeyMap,
-}
+pub mod jobs;
+
+pub struct Settings {}
 
 pub struct Editor {
     pub loaded_files: Vec<String>,
+    pub keymap_controller: KeyMapWrapper,
     pub settings: Settings,
     pub mode: Mode,
     pub exit: bool,
 }
 
-pub struct Context<'a> {
-    pub editor: &'a mut Editor,
+impl Editor {
+    pub fn new(path: &str) -> Result<Self> {
+        Ok(Self {
+            loaded_files: vec![],
+            keymap_controller: KeyMapWrapper::new(path)?,
+            settings: Settings {},
+            mode: Mode::Normal,
+            exit: false,
+        })
+    }
 }
 
-pub type Callback = Box<dyn FnOnce(&mut Context) + Send>;
-pub type Job = BoxFuture<'static, Option<Callback>>;
-
-pub struct Jobs {
-    pub list: FuturesUnordered<Job>,
+pub struct Context<'a> {
+    pub editor: &'a mut Editor,
 }

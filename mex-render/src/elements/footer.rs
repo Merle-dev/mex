@@ -15,7 +15,7 @@ impl Element for Footer {
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
-        ctx: &mex_core::Context,
+        ctx: &mut mex_app::Context,
     ) {
         Paragraph::new(format!(
             "{} | {}",

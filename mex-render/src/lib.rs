@@ -1,6 +1,7 @@
 use std::{any::Any, fmt::Debug};
 
 use indexmap::IndexMap;
+use mex_app::Context;
 use ratatui::{
     buffer::Buffer,
     crossterm::event::KeyEvent,
@@ -10,10 +11,10 @@ use ratatui::{
 pub mod elements;
 
 pub trait Element: Any {
-    fn render(&mut self, buffer: &mut Buffer, area: Rect, ctx: &Context);
+    fn render(&mut self, buffer: &mut Buffer, area: Rect, ctx: &mut Context);
     fn is_visible(&self) -> bool;
     fn captures_input(&self) -> bool;
-    fn capture_input(&mut self, _event: KeyEvent) {
+    fn capture_input(&mut self, _event: KeyEvent, _ctx: &mut Context) {
         panic!(
             "{} has to implement capture_input because it's captures the event",
             self.type_name()
@@ -193,7 +194,7 @@ impl Compositor {
     ) -> Option<&mut Box<dyn Element + Send + Sync + 'static>> {
         self.elements.get_mut(id).map(|(e, _)| e)
     }
-    pub fn render(&mut self, area: Rect, buffer: &mut Buffer, ctx: &Context) {
+    pub fn render(&mut self, area: Rect, buffer: &mut Buffer, ctx: &mut Context) {
         let updates: Vec<(&Box<dyn Element + Sync + Send>, bool)> = self
             .elements
             .iter()

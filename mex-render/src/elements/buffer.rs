@@ -1,6 +1,9 @@
-use ratatui::widgets::{List, ListItem, Widget};
-
 use crate::Element;
+use mex_keys::KeyBranch;
+use ratatui::{
+    crossterm::event::KeyCode,
+    widgets::{List, ListItem, Widget},
+};
 
 pub struct Buffer {}
 impl Buffer {
@@ -14,12 +17,33 @@ impl Element for Buffer {
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
-        ctx: &mex_core::Context,
+        ctx: &mut mex_app::Context,
     ) {
         List::new((0..15).map(|i| ListItem::new(format!("{i}")))).render(area, buffer);
     }
     fn captures_input(&self) -> bool {
-        false
+        true
+    }
+    fn capture_input(
+        &mut self,
+        event: ratatui::crossterm::event::KeyEvent,
+        ctx: &mut mex_app::Context,
+    ) {
+        if event.code == KeyCode::Char('q') {
+            ctx.editor.exit = true;
+        }
+        let _ = ctx
+            .editor
+            .keymap_controller
+            .compute_key(event.code)
+            .map(|err| {
+                err.map(|(branch, num)| match branch {
+                    KeyBranch::Command(cmd) => {
+                        dbg!(cmd, num);
+                    }
+                    _ => (),
+                })
+            });
     }
     fn is_visible(&self) -> bool {
         true

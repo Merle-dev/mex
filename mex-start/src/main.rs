@@ -1,10 +1,9 @@
 use std::time::Duration;
 
 use anyhow::Result;
-use futures::stream::FuturesUnordered;
-use mex_core::{Context, Editor, Jobs, Mode};
+use mex_app::{Context, Editor, jobs::Jobs};
 use mex_render::{
-    Compositor, CompositorLayout, CompositorLayoutArea, Location,
+    Compositor, Location,
     elements::{buffer::Buffer, explore::Explore, footer::Footer},
 };
 use ratatui::{
@@ -23,16 +22,10 @@ struct App {
 }
 
 impl App {
-    fn new() -> Result<Self, ()> {
+    fn new() -> Result<Self> {
         Ok(Self {
-            jobs: Jobs {
-                list: FuturesUnordered::new(),
-            },
-            editor: Editor {
-                loaded_files: vec![],
-                mode: Mode::Normal,
-                exit: false,
-            },
+            jobs: Jobs::new(),
+            editor: Editor::new("./config.toml")?,
             compositor: Compositor::default(),
             terminal: init(),
         })
@@ -63,12 +56,12 @@ fn main() -> Result<()> {
     });
 
     while !app.editor.exit {
+        let mut ctx = Context {
+            editor: &mut app.editor,
+        };
         if event::poll(Duration::from_millis(250))? {
             match event::read()? {
                 Event::Key(key_event) => {
-                    if key_event.code == KeyCode::Enter {
-                        app.editor.exit = true;
-                    }
                     app.compositor
                         .last_focused_element
                         .iter()
@@ -78,7 +71,7 @@ fn main() -> Result<()> {
                                 .is_some_and(|element| element.is_visible())
                         })
                         .and_then(|id| app.compositor.elements.get_mut(id))
-                        .map(|(element, _)| element.capture_input(key_event));
+                        .map(|(element, _)| element.capture_input(key_event, &mut ctx));
                 }
                 Event::Resize(width, height) => {
                     app.compositor
@@ -88,14 +81,11 @@ fn main() -> Result<()> {
                 _ => {}
             }
         }
-        let ctx = Context {
-            editor: &mut app.editor,
-        };
         let _ = app
             .terminal
             .draw(|frame: &mut Frame| {
                 app.compositor
-                    .render(frame.area(), frame.buffer_mut(), &ctx)
+                    .render(frame.area(), frame.buffer_mut(), &mut ctx)
             })
             .map_err(|e| eprintln!("{}", e));
     }
