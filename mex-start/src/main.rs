@@ -4,7 +4,9 @@ use anyhow::Result;
 use mex_app::{Context, Editor, jobs::Jobs};
 use mex_render::{
     Compositor, Location,
-    elements::{buffer::Buffer, explore::Explore, footer::Footer},
+    elements::{
+        buffer::Buffer, debug::DebugElement, explore::Explore, footer::Footer, which_key::WhichKey,
+    },
 };
 use ratatui::{
     DefaultTerminal, Frame,
@@ -41,13 +43,16 @@ impl Drop for App {
 fn main() -> Result<()> {
     let mut app = App::new().unwrap();
 
-    app.compositor.add_element(Footer::new(), |ide, layout| {
+    app.compositor.add_element(DebugElement {}, |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
     app.compositor
         .add_element(Buffer::new(None), |ide, layout| {
-            layout.push(Constraint::Fill(1), ide);
+            layout.push(Constraint::Fill(10), ide);
         });
+    app.compositor.add_element(WhichKey::new(), |ide, layout| {
+        layout.push(Constraint::Percentage(15), ide);
+    });
     app.compositor.add_element(Footer::new(), |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
@@ -59,7 +64,7 @@ fn main() -> Result<()> {
         let mut ctx = Context {
             editor: &mut app.editor,
         };
-        if event::poll(Duration::from_millis(250))? {
+        if event::poll(Duration::from_millis(32))? {
             match event::read()? {
                 Event::Key(key_event) => {
                     app.compositor

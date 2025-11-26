@@ -216,14 +216,13 @@ impl Compositor {
             .collect();
     }
     pub fn calculate_areas(&mut self, area: Rect) {
-        let _: Vec<_> = Self::calc_layout(&self.element_layout, area)
+        Self::calc_layout(&self.element_layout, area)
             .iter()
-            .map(|(id, new_area)| {
+            .for_each(|(id, new_area)| {
                 self.elements
                     .get_mut(id)
-                    .map(|(_, area)| *area = Some(*new_area))
-            })
-            .collect();
+                    .map(|(_, area)| *area = Some(*new_area));
+            });
     }
     fn calc_layout(layout: &CompositorLayout, area: Rect) -> Vec<(CompositorElementId, Rect)> {
         let (constraints, comp_areas): (Vec<RenderInfo>, Vec<CompositorLayoutArea>) =

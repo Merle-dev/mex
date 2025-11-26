@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cmp::Ordering, collections::HashMap};
 
 use anyhow::Result;
 use mex_core::Mode;
@@ -12,6 +12,38 @@ use crate::key_operations::to_key;
 pub enum KeyOption {
     Num,
     Specific(KeyCode),
+}
+
+impl KeyOption {
+    pub fn cmp(&self, other: &Self) -> Ordering {
+        match *self {
+            KeyOption::Num => match *other {
+                KeyOption::Num => Ordering::Equal,
+                _ => Ordering::Greater,
+            },
+            Self::Specific(skc) => match *other {
+                KeyOption::Num => Ordering::Less,
+                Self::Specific(okc) => {
+                    let self_char = skc.to_string().chars().nth(0).unwrap();
+                    let other_char = okc.to_string().chars().nth(0).unwrap();
+                    match (self_char as u8) as i32 - (other_char as u8) as i32 {
+                        ..0 => Ordering::Less,
+                        0 => Ordering::Equal,
+                        0.. => Ordering::Greater,
+                    }
+                }
+            },
+        }
+    }
+}
+
+impl ToString for KeyOption {
+    fn to_string(&self) -> String {
+        match *self {
+            KeyOption::Num => String::from("[@]"),
+            KeyOption::Specific(ck) => ck.to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -96,12 +128,31 @@ impl KeyMap {
         Ok(Self(hm))
     }
     pub fn seperate(str: String) -> Vec<KeyOption> {
-        str.split('{')
-            .map(|part| part.split('}'))
+        str.chars()
+            .fold((vec![], false), |(mut elements, inside), str| {
+                if str == '{' && !inside {
+                    elements.push(Ok(String::new()));
+                    (elements, true)
+                } else if str == '}' && inside {
+                    (elements, false)
+                } else if inside {
+                    elements
+                        .iter_mut()
+                        .fold(None, |_acc, el| el.as_mut().ok())
+                        .map(|last| last.push(str));
+                    (elements, inside)
+                } else {
+                    elements.push(Err(str));
+                    (elements, inside)
+                }
+            })
+            .0
+            .iter()
+            .map(|result| match result {
+                Ok(special) => to_key(special.clone()),
+                Err(char) => to_key(char.to_string()),
+            })
             .flatten()
-            .map(String::from)
-            .map(to_key)
-            .flatten()
-            .collect::<Vec<KeyOption>>()
+            .collect()
     }
 }

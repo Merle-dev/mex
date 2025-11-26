@@ -1,27 +1,35 @@
-use std::fmt::Debug;
+use std::time::Duration;
 
 use ratatui::widgets::{Paragraph, Widget};
 
 use crate::Element;
 
-pub struct DebugElement<T: Debug> {
-    pub text: T,
-}
+pub struct DebugElement {}
 
-impl<T: Debug> DebugElement<T> {
-    pub fn new(a: T) -> Self {
-        Self { text: a }
-    }
-}
-
-impl<T: Debug + 'static> Element for DebugElement<T> {
+impl Element for DebugElement {
     fn render(
         &mut self,
         buffer: &mut ratatui::prelude::Buffer,
         area: ratatui::prelude::Rect,
         ctx: &mut mex_app::Context,
     ) {
-        Paragraph::new(format!("{:?}", self.text)).render(area, buffer);
+        Paragraph::new(format!(
+            "{}",
+            ctx.editor
+                .messages
+                .first()
+                .map(|e| e.0.clone())
+                .unwrap_or("".to_string())
+        ))
+        .render(area, buffer);
+        if ctx
+            .editor
+            .messages
+            .first()
+            .is_some_and(|(_, age)| age.elapsed() > Duration::from_secs(3))
+        {
+            ctx.editor.messages.remove(0);
+        }
     }
     fn captures_input(&self) -> bool {
         false

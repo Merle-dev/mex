@@ -4,15 +4,13 @@ use anyhow::{Result, anyhow};
 use mex_core::Mode;
 use ratatui::crossterm::event::KeyCode;
 
-use crate::keymap::KeyOption;
-
 mod key_operations;
 mod keymap;
-pub use keymap::{KeyBranch, KeyMap};
+pub use keymap::{KeyBranch, KeyMap, KeyOption};
 
 pub struct KeyMapWrapper {
+    pub current: HashMap<KeyOption, KeyBranch>, /* Would be better a reference but to complicated and performance is negitable */
     base: KeyMap,
-    current: HashMap<KeyOption, KeyBranch>, /* Would be better a reference but to complicated and performance is negitable */
     stored_nums: Vec<u8>,
 }
 
@@ -55,27 +53,46 @@ impl KeyMapWrapper {
         Ok(())
     }
     pub fn compute_key(&mut self, key: KeyCode) -> Result<Option<(KeyBranch, Rc<[u8]>)>> {
-        if let Some(branch) = match key {
+        let empty = || -> Rc<[u8]> { Rc::new([]) };
+        match key {
             KeyCode::Char(char) if (48..=57).contains(&(char as u8)) => {
-                self.current.get(&KeyOption::Num).map(|branch| {
+                Ok(self.current.get(&KeyOption::Num).map(|_| {
                     self.stored_nums.push(char as u8 - 48);
-                    branch
-                })
+                    (KeyBranch::Branches(self.current.clone()), empty())
+                }))
             }
-            other => self.current.get(&KeyOption::Specific(other)),
-        }
-        .cloned()
-        {
-            self.after_care(&branch)?;
-            let buf: Rc<[u8]> = match branch {
-                KeyBranch::Branches(_) => Rc::new([]),
-                KeyBranch::Command(_) => {
-                    Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice())
-                }
-            };
-            Ok(Some((branch, buf)))
-        } else {
-            Ok(None)
+            other => self
+                .current
+                .get(&KeyOption::Specific(other))
+                .map(|branch| {
+                    let buf: Rc<[u8]> = match branch {
+                        KeyBranch::Branches(_) => empty(),
+                        KeyBranch::Command(_) => {
+                            Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice())
+                        }
+                    };
+                    (branch.clone(), buf)
+                })
+                .map(|result| self.after_care(&result.0).map(|_| result))
+                .or_else(|| {
+                    self.current
+                        .get(&KeyOption::Num)
+                        .and_then(|result| match result {
+                            KeyBranch::Branches(hm) => hm.get(&KeyOption::Specific(other)),
+                            KeyBranch::Command(_) => None,
+                        })
+                        .map(|branch| {
+                            let buf = match branch {
+                                KeyBranch::Branches(_) => empty(),
+                                KeyBranch::Command(_) => Rc::from(
+                                    std::mem::take(&mut self.stored_nums).into_boxed_slice(),
+                                ),
+                            };
+                            (branch.clone(), buf)
+                        })
+                        .map(|result| self.after_care(&result.0).map(|_| result))
+                })
+                .transpose(),
         }
     }
 }
@@ -91,6 +108,7 @@ mod tests {
     #[test]
     fn from_config() {
         assert!(KeyMap::from_config("../config.toml").is_ok());
+        let km = KeyMap::from_config("../config.toml").is_ok();
     }
 
     #[test]

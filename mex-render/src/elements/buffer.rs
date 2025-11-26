@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use crate::Element;
 use mex_keys::KeyBranch;
 use ratatui::{
@@ -36,7 +38,25 @@ impl Element for Buffer {
             .editor
             .keymap_controller
             .compute_key(event.code)
-            .map(|err| dbg!(err));
+            .iter()
+            .flatten()
+            .map(|result| match &result.0 {
+                KeyBranch::Command(cmd) => ctx.editor.messages.push((
+                    format!(
+                        "{cmd} {:?}",
+                        result
+                            .1
+                            .iter()
+                            .rev()
+                            .enumerate()
+                            .fold(0u32, |acc, (i, item)| acc
+                                + (*item as u32) * 10u32.pow(i as u32))
+                    ),
+                    Instant::now(),
+                )),
+                KeyBranch::Branches(_) => (),
+            })
+            .collect::<()>();
     }
     fn is_visible(&self) -> bool {
         true
