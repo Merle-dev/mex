@@ -67,10 +67,13 @@ impl KeyMapWrapper {
         .cloned()
         {
             self.after_care(&branch)?;
-            Ok(Some((
-                branch,
-                Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice()),
-            )))
+            let buf: Rc<[u8]> = match branch {
+                KeyBranch::Branches(_) => Rc::new([]),
+                KeyBranch::Command(_) => {
+                    Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice())
+                }
+            };
+            Ok(Some((branch, buf)))
         } else {
             Ok(None)
         }

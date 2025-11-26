@@ -1,10 +1,10 @@
-mode-n = { mode = "nivrb", keys = "{esc}" } # Do not remove this if you dont know what you are doing
+mode-n = { mode = "nisrb", keys = "{esc}" } # Do not remove this if you dont know what you are doing
 print = { mode = "n", keys = "{space}{num}p" }
-remove = { mode = "nv", keys = "{space}{num}x" }
+remove = { mode = "ns", keys = "{space}{num}x" }
 yank = { mode = "n", keys = "yy" }
 quit = { mode = "n", keys = "{space}c" }
 save = { mode = "n", keys = "{space}s" }
-input = { mode = "nivrb", keys = ":" }
-mode-i = { mode = "nivrb", keys = "i" }
-mode-v = { mode = "nivrb", keys = "v" }
-mode-r = { mode = "nivrb", keys = "r" }
+input = { mode = "nisrb", keys = ":" }
+mode-i = { mode = "nisrb", keys = "i" }
+mode-v = { mode = "nisrb", keys = "v" }
+mode-r = { mode = "nisrb", keys = "r" }

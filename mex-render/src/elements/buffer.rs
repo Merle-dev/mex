@@ -36,14 +36,7 @@ impl Element for Buffer {
             .editor
             .keymap_controller
             .compute_key(event.code)
-            .map(|err| {
-                err.map(|(branch, num)| match branch {
-                    KeyBranch::Command(cmd) => {
-                        dbg!(cmd, num);
-                    }
-                    _ => (),
-                })
-            });
+            .map(|err| dbg!(err));
     }
     fn is_visible(&self) -> bool {
         true
