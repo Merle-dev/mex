@@ -61,7 +61,11 @@ impl Element for Explore {
     fn captures_input(&self) -> bool {
         true
     }
-    fn capture_input(&mut self, event: ratatui::crossterm::event::KeyEvent, _ctx: &mut Context) {
+    fn capture_input(
+        &mut self,
+        event: ratatui::crossterm::event::KeyEvent,
+        _ctx: &mut Context,
+    ) -> Option<(u16, u16)> {
         match event.code {
             KeyCode::Char(key) => {
                 self.query.push(key);
@@ -76,6 +80,7 @@ impl Element for Explore {
             KeyCode::Esc => self.visible = false,
             _ => (),
         };
+        None
     }
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self

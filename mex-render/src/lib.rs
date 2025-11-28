@@ -14,7 +14,7 @@ pub trait Element: Any {
     fn render(&mut self, buffer: &mut Buffer, area: Rect, ctx: &mut Context);
     fn is_visible(&self) -> bool;
     fn captures_input(&self) -> bool;
-    fn capture_input(&mut self, _event: KeyEvent, _ctx: &mut Context) {
+    fn capture_input(&mut self, _event: KeyEvent, _ctx: &mut Context) -> Option<(u16, u16)> {
         panic!(
             "{} has to implement capture_input because it's captures the event",
             self.type_name()
@@ -237,15 +237,5 @@ impl Compositor {
             .map(|a| a)
             .flatten()
             .collect()
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::{Element, elements::debug::DebugElement};
-
-    #[test]
-    fn name() {
-        println!("{}", DebugElement { text: "" }.type_name())
     }
 }

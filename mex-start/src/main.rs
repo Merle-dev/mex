@@ -42,12 +42,13 @@ impl Drop for App {
 
 fn main() -> Result<()> {
     let mut app = App::new().unwrap();
+    let args: Vec<String> = std::env::args().into_iter().collect();
 
     app.compositor.add_element(DebugElement {}, |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
     app.compositor
-        .add_element(Buffer::new(None), |ide, layout| {
+        .add_element(Buffer::new(args.get(1).cloned()), |ide, layout| {
             layout.push(Constraint::Fill(10), ide);
         });
     app.compositor.add_element(WhichKey::new(), |ide, layout| {
@@ -60,6 +61,8 @@ fn main() -> Result<()> {
         layout.push(Location::Center((5, 6), (9, 10)), ide);
     });
 
+    app.terminal.show_cursor()?;
+    app.terminal.set_cursor_position((10, 10))?;
     while !app.editor.exit {
         let mut ctx = Context {
             editor: &mut app.editor,
@@ -76,7 +79,8 @@ fn main() -> Result<()> {
                                 .is_some_and(|element| element.is_visible())
                         })
                         .and_then(|id| app.compositor.elements.get_mut(id))
-                        .map(|(element, _)| element.capture_input(key_event, &mut ctx));
+                        .and_then(|(element, _)| element.capture_input(key_event, &mut ctx))
+                        .map(|p| app.terminal.set_cursor_position(p))?;
                 }
                 Event::Resize(width, height) => {
                     app.compositor

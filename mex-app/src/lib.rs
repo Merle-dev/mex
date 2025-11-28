@@ -33,3 +33,14 @@ impl Editor {
 pub struct Context<'a> {
     pub editor: &'a mut Editor,
 }
+
+impl<'a> Context<'a> {
+    pub fn compute_command(&mut self, command: String) {
+        match command.as_str() {
+            "mode-i" => self.editor.mode = Mode::Insert,
+            "mode-n" => self.editor.mode = Mode::Normal,
+            "mode-s" => self.editor.mode = Mode::Select,
+            _ => (),
+        }
+    }
+}
