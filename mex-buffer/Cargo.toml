@@ -1,0 +1,8 @@
+[package]
+name = "mex-buffer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow.workspace = true
+ropey = "1.6.1"

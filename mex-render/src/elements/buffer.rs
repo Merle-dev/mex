@@ -1,7 +1,7 @@
 use std::{io::Read, time::Instant};
 
 use crate::Element;
-use mex_core::Mode;
+use mex_core::{Mode, log};
 use mex_keys::KeyBranch;
 use ratatui::{
     crossterm::event::KeyCode,
@@ -10,23 +10,18 @@ use ratatui::{
 };
 
 pub struct Buffer {
-    lines: Vec<String>,
+    content: RopeWrapper,
+    index: usize,
     cursor: (usize, usize),
+    last_position: (u16, u16),
 }
 impl Buffer {
     pub fn new(file: Option<String>) -> Self {
-        let lines: Vec<_> = file
-            .and_then(|name| std::fs::File::open(name).ok())
-            .and_then(|mut a| {
-                let mut buf = "".to_string();
-                a.read_to_string(&mut buf)
-                    .ok()
-                    .map(|_| buf.lines().map(String::from).collect())
-            })
-            .unwrap_or(vec![]);
         Self {
-            lines,
+            content: RopeWrapper::new(file),
+            index: 0,
             cursor: (0, 0),
+            last_position: (0, 0),
         }
     }
 }
@@ -38,10 +33,11 @@ impl Element for Buffer {
         area: ratatui::prelude::Rect,
         ctx: &mut mex_app::Context,
     ) {
+        self.last_position = (area.x, area.y);
         List::new(
-            self.lines
-                .iter()
-                .map(|line| ListItem::new(format!("{line}"))),
+            self.content
+                .lines()
+                .map(|line| line.chars().collect::<String>()),
         )
         .render(area, buffer);
         Paragraph::new(format!("{:?}", self.cursor)).render(Rect::new(0, 30, 20, 1), buffer);
@@ -54,28 +50,31 @@ impl Element for Buffer {
         event: ratatui::crossterm::event::KeyEvent,
         ctx: &mut mex_app::Context,
     ) -> Option<(u16, u16)> {
+        let get = |content: &mut Rope, index| -> Option<char> {
+            (content.byte_len() >= index).then(|| content.byte(index) as char)
+        };
         match event.code {
             KeyCode::Delete => ctx.editor.exit = true,
-            KeyCode::Backspace if ctx.editor.mode == Mode::Insert => {
-                let _ = self
-                    .lines
-                    .get_mut(self.cursor.1)
-                    .map(|line| line.remove(self.cursor.0.min(line.len().saturating_sub(1))));
-                self.cursor.0 = self.cursor.0.saturating_sub(1);
-            }
             KeyCode::Char(char) if ctx.editor.mode == Mode::Insert => {
-                self.lines.get_mut(self.cursor.1).map(|line| {
-                    line.insert(self.cursor.0.min(line.len().saturating_sub(1)), char);
-                    self.cursor.0 += 1;
-                });
+                self.content.insert(self.index, char.to_string().as_str());
             }
             KeyCode::Left => {
                 self.cursor.0 = self.cursor.0.saturating_sub(1);
-                return Some((self.cursor.0 as u16, self.cursor.1 as u16));
+                if self.index != 0 && get(&mut self.content, self.index - 1) != Some('\n') {
+                    self.index -= 1;
+                }
             }
             KeyCode::Right => {
                 self.cursor.0 += 1;
-                return Some((self.cursor.0 as u16, self.cursor.1 as u16));
+                if get(&mut self.content, self.index + 1) != Some('\n') {
+                    self.index += 1;
+                }
+            }
+            KeyCode::Up => {
+                self.cursor.1 = self.cursor.1.saturating_sub(1);
+            }
+            KeyCode::Down => {
+                self.cursor.1 += 1;
             }
             other => ctx
                 .editor
@@ -101,7 +100,11 @@ impl Element for Buffer {
                     KeyBranch::Branches(_) => (),
                 }),
         };
-        None
+
+        Some((
+            self.cursor.0 as u16 + self.last_position.0,
+            self.cursor.1 as u16 + self.last_position.1,
+        ))
     }
     fn is_visible(&self) -> bool {
         true

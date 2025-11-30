@@ -10,6 +10,7 @@ mex-core.workspace = true
 mex-keys.workspace = true
 mex-app.workspace = true
 anyhow.workspace = true
+crop.workspace = true
 ignore = "0.4.25"
 regex = "1.12.2"
 indexmap = "2.12.1"

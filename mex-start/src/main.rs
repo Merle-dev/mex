@@ -21,6 +21,12 @@ struct App {
     editor: Editor,
     compositor: Compositor,
     terminal: DefaultTerminal,
+    last_cursor_pos: Option<(u16, u16)>,
+}
+
+enum Cursor {
+    Hiden,
+    Shown((u16, u16)),
 }
 
 impl App {
@@ -30,6 +36,7 @@ impl App {
             editor: Editor::new("./config.toml")?,
             compositor: Compositor::default(),
             terminal: init(),
+            last_cursor_pos: None,
         })
     }
 }
@@ -57,17 +64,16 @@ fn main() -> Result<()> {
     app.compositor.add_element(Footer::new(), |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
-    app.compositor.add_element(Explore::new(), |ide, layout| {
-        layout.push(Location::Center((5, 6), (9, 10)), ide);
-    });
+    // app.compositor.add_element(Explore::new(), |ide, layout| {
+    //     layout.push(Location::Center((5, 6), (9, 10)), ide);
+    // });
 
     app.terminal.show_cursor()?;
-    app.terminal.set_cursor_position((10, 10))?;
     while !app.editor.exit {
         let mut ctx = Context {
             editor: &mut app.editor,
         };
-        if event::poll(Duration::from_millis(32))? {
+        if event::poll(Duration::from_millis(1))? {
             match event::read()? {
                 Event::Key(key_event) => {
                     app.compositor
@@ -80,7 +86,7 @@ fn main() -> Result<()> {
                         })
                         .and_then(|id| app.compositor.elements.get_mut(id))
                         .and_then(|(element, _)| element.capture_input(key_event, &mut ctx))
-                        .map(|p| app.terminal.set_cursor_position(p))?;
+                        .map(|new_cursor_pos| app.last_cursor_pos = Some(new_cursor_pos));
                 }
                 Event::Resize(width, height) => {
                     app.compositor
@@ -90,9 +96,12 @@ fn main() -> Result<()> {
                 _ => {}
             }
         }
+
         let _ = app
             .terminal
             .draw(|frame: &mut Frame| {
+                app.last_cursor_pos
+                    .map(|pos| frame.set_cursor_position(pos));
                 app.compositor
                     .render(frame.area(), frame.buffer_mut(), &mut ctx)
             })
