@@ -26,10 +26,16 @@ pub fn log<T: Debug>(text: &T) {
         let _ = file
             .lock()
             .unwrap()
-            .write(format!("[] {:?}\n", text).as_bytes())
+            .write(format!("{:#?}\n\n\n", text).as_bytes())
             .map_err(|err| dbg!(err))
             .unwrap();
     }
+}
+
+#[derive(Debug)]
+pub struct FilePosition {
+    pub x: usize,
+    pub y: usize,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]

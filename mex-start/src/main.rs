@@ -3,14 +3,12 @@ use std::time::Duration;
 use anyhow::Result;
 use mex_app::{Context, Editor, jobs::Jobs};
 use mex_render::{
-    Compositor, Location,
-    elements::{
-        buffer::Buffer, debug::DebugElement, explore::Explore, footer::Footer, which_key::WhichKey,
-    },
+    Compositor,
+    elements::{buffer::Buffer, debug::DebugElement, footer::Footer, which_key::WhichKey},
 };
 use ratatui::{
     DefaultTerminal, Frame,
-    crossterm::event::{self, Event, KeyCode},
+    crossterm::event::{self, Event},
     init,
     layout::{Constraint, Rect},
     restore,
@@ -21,7 +19,6 @@ struct App {
     editor: Editor,
     compositor: Compositor,
     terminal: DefaultTerminal,
-    last_cursor_pos: Option<(u16, u16)>,
 }
 
 enum Cursor {
@@ -36,7 +33,6 @@ impl App {
             editor: Editor::new("./config.toml")?,
             compositor: Compositor::default(),
             terminal: init(),
-            last_cursor_pos: None,
         })
     }
 }
@@ -54,10 +50,12 @@ fn main() -> Result<()> {
     app.compositor.add_element(DebugElement {}, |ide, layout| {
         layout.push(Constraint::Length(1), ide);
     });
-    app.compositor
-        .add_element(Buffer::new(args.get(1).cloned()), |ide, layout| {
+    app.compositor.add_element(
+        Buffer::new(args.get(1).cloned().as_deref())?,
+        |ide, layout| {
             layout.push(Constraint::Fill(10), ide);
-        });
+        },
+    );
     app.compositor.add_element(WhichKey::new(), |ide, layout| {
         layout.push(Constraint::Percentage(15), ide);
     });
@@ -73,7 +71,7 @@ fn main() -> Result<()> {
         let mut ctx = Context {
             editor: &mut app.editor,
         };
-        if event::poll(Duration::from_millis(1))? {
+        if event::poll(Duration::from_millis(16))? {
             match event::read()? {
                 Event::Key(key_event) => {
                     app.compositor
@@ -85,8 +83,15 @@ fn main() -> Result<()> {
                                 .is_some_and(|element| element.is_visible())
                         })
                         .and_then(|id| app.compositor.elements.get_mut(id))
-                        .and_then(|(element, _)| element.capture_input(key_event, &mut ctx))
-                        .map(|new_cursor_pos| app.last_cursor_pos = Some(new_cursor_pos));
+                        .and_then(|(element, rect)| {
+                            element.capture_input(key_event, &mut ctx).zip(*rect)
+                        })
+                        .map(|(new_cursor_pos, rect)| {
+                            ctx.editor.last_cursor_pos = Some((
+                                new_cursor_pos.0.min(rect.width) + rect.x,
+                                new_cursor_pos.1.min(rect.height) + rect.y,
+                            ))
+                        });
                 }
                 Event::Resize(width, height) => {
                     app.compositor
@@ -100,7 +105,8 @@ fn main() -> Result<()> {
         let _ = app
             .terminal
             .draw(|frame: &mut Frame| {
-                app.last_cursor_pos
+                ctx.editor
+                    .last_cursor_pos
                     .map(|pos| frame.set_cursor_position(pos));
                 app.compositor
                     .render(frame.area(), frame.buffer_mut(), &mut ctx)

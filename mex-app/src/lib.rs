@@ -15,6 +15,7 @@ pub struct Editor {
     pub mode: Mode,
     pub exit: bool,
     pub messages: Vec<(String, Instant)>,
+    pub last_cursor_pos: Option<(u16, u16)>,
 }
 
 impl Editor {
@@ -26,6 +27,7 @@ impl Editor {
             mode: Mode::Normal,
             messages: vec![],
             exit: false,
+            last_cursor_pos: None,
         })
     }
 }

@@ -9,6 +9,7 @@ serde = { version = "1.0.226", features = ["derive"] }
 mex-app = { path = "./mex-app/" }
 mex-core = { path = "./mex-core/" }
 mex-keys = { path = "./mex-keys/" }
+mex-buffer = { path = "./mex-buffer/" }
 mex-render = { path = "./mex-render/" }
 ratatui = "0.29.0"
 serde_json = "1.0.145"

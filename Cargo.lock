@@ -228,15 +228,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crop"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fa28d21af9044d49bcfb1eceddeeb9fadc6a17207c6a1bf0d841ef0bd9ad36e"
-dependencies = [
- "str_indices",
-]
-
-[[package]]
 name = "crossbeam-deque"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -660,6 +651,7 @@ name = "mex-buffer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "mex-core",
  "ropey",
 ]
 
@@ -688,10 +680,10 @@ name = "mex-render"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "crop",
  "ignore",
  "indexmap",
  "mex-app",
+ "mex-buffer",
  "mex-core",
  "mex-keys",
  "ratatui",

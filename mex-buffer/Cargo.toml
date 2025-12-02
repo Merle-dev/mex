@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 anyhow.workspace = true
+mex-core.workspace = true
 ropey = "1.6.1"
