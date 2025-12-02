@@ -172,11 +172,5 @@ impl Buffer {
                 .min(max_abs)
                 .max(0);
         }
-
-        // self.scroll = self
-        //     .scroll
-        //     .max(self.cursor.y - rect.height as usize)
-        //     .min(self.content.len_lines() - rect.height as usize - 1)
-        //     .min(self.cursor.y);
     }
 }
