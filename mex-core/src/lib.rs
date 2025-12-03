@@ -32,6 +32,18 @@ pub fn log<T: Debug>(text: &T) {
     }
 }
 
+pub fn log_self<T: Debug>(text: T) -> T {
+    if let Some(file) = &LOG.file {
+        let _ = file
+            .lock()
+            .unwrap()
+            .write(format!("{:#?}\n\n\n", text).as_bytes())
+            .map_err(|err| dbg!(err))
+            .unwrap();
+    }
+    text
+}
+
 #[derive(Debug)]
 pub struct FilePosition {
     pub x: usize,
@@ -43,6 +55,8 @@ pub enum Mode {
     Normal,
     Insert,
     Select,
+    Replace,
+    MultiInsert,
 }
 
 impl Display for Mode {
@@ -51,6 +65,8 @@ impl Display for Mode {
             Mode::Normal => f.write_str("normal"),
             Mode::Insert => f.write_str("insert"),
             Mode::Select => f.write_str("select"),
+            Mode::Replace => f.write_str("replace"),
+            Mode::MultiInsert => f.write_str("m-insert"),
         }
     }
 }

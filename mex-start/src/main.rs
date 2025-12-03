@@ -16,6 +16,7 @@ use ratatui::{
 
 struct App {
     jobs: Jobs,
+    exit: bool,
     editor: Editor,
     compositor: Compositor,
     terminal: DefaultTerminal,
@@ -33,6 +34,7 @@ impl App {
             editor: Editor::new("./config.toml")?,
             compositor: Compositor::default(),
             terminal: init(),
+            exit: false,
         })
     }
 }
@@ -67,9 +69,10 @@ fn main() -> Result<()> {
     // });
 
     app.terminal.show_cursor()?;
-    while !app.editor.exit {
+    while !app.exit {
         let mut ctx = Context {
             editor: &mut app.editor,
+            exit: &mut app.exit,
         };
         if event::poll(Duration::from_millis(16))? {
             match event::read()? {

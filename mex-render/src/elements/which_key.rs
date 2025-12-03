@@ -1,8 +1,7 @@
 use mex_keys::{KeyBranch, KeyOption};
 use ratatui::{
     layout::{Constraint, Layout},
-    style::Stylize,
-    widgets::{Block, List, ListItem, Widget},
+    widgets::{Block, List, ListItem, Paragraph, Widget},
 };
 
 use crate::Element;
@@ -40,11 +39,17 @@ impl Element for WhichKey {
             .map(|item| ListItem::new(item))
             .collect::<Vec<_>>();
         let items_chunks = items.chunks(h as usize).collect::<Vec<_>>();
+        let [border, show_area] = Layout::new(
+            ratatui::layout::Direction::Vertical,
+            [Constraint::Length(1), Constraint::Fill(1)],
+        )
+        .areas(area);
+        Paragraph::new("─".repeat(border.width as usize)).render(border, buffer);
         let areas = Layout::new(
             ratatui::layout::Direction::Horizontal,
             vec![Constraint::Fill(1); items_chunks.len()],
         )
-        .split(area);
+        .split(show_area);
         areas
             .into_iter()
             .zip(items_chunks)
@@ -67,8 +72,8 @@ impl Element for WhichKey {
 
 fn split_up(key_opt: Vec<&KeyOption>, key_branch: &KeyBranch) -> Vec<String> {
     match key_branch {
-        KeyBranch::Command(cmd) => vec![format!(
-            "{} -> {cmd}",
+        KeyBranch::Command { command, .. } => vec![format!(
+            "{} -> {command}",
             key_opt
                 .into_iter()
                 .map(keyopt_to_char)

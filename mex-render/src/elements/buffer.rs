@@ -6,7 +6,7 @@ use mex_keys::KeyBranch;
 use ratatui::{
     crossterm::event::KeyCode,
     layout::Rect,
-    widgets::{List, Widget},
+    widgets::{List, Paragraph, Widget},
 };
 
 pub struct Buffer {
@@ -42,6 +42,8 @@ impl Element for Buffer {
             }
         })
         .render(area, buffer);
+        Paragraph::new(format!("{:?}", self.cursor_extend))
+            .render(Rect::new(50, 30, 100, 1), buffer);
     }
     fn captures_input(&self) -> bool {
         true
@@ -52,49 +54,46 @@ impl Element for Buffer {
         ctx: &mut mex_app::Context,
     ) -> Option<(u16, u16)> {
         match event.code {
-            KeyCode::Delete if ctx.editor.mode == Mode::Insert => {
-                self.cursor.x = self.cursor.x.saturating_sub(1);
-                let _ = self.content.delete(self.cursor.x, self.cursor.y, 1);
-            }
-            KeyCode::Delete => ctx.editor.exit = true,
-            KeyCode::Backspace if ctx.editor.mode == Mode::Insert => self.backspace(),
             KeyCode::Char(char) if ctx.editor.mode == Mode::Insert => {
                 self.content
                     .insert(self.cursor.x, self.cursor.y, char)
                     .unwrap();
                 self.cursor.x += 1;
             }
-            KeyCode::Left => self.horizontal(-1),
-            KeyCode::Right => self.horizontal(1),
-            KeyCode::Up => self.scroll(-1),
-            KeyCode::Down => self.scroll(1),
-            KeyCode::PageUp => self.scroll(-5),
-            KeyCode::PageDown => self.scroll(5),
-            KeyCode::End => self.horizontal(self.content.line_len(self.cursor.y) as isize),
-            other => ctx
-                .editor
-                .keymap_controller
-                .compute_key(other)
-                .iter()
-                .flatten()
-                .for_each(|result| match &result.0 {
-                    KeyBranch::Command(cmd) => ctx.compute_command(cmd.clone()),
-                    // KeyBranch::Command(cmd) => ctx.editor.messages.push((
-                    //     format!(
-                    //         "{cmd} {:?}",
-                    //         result
-                    //             .1
-                    //             .iter()
-                    //             .rev()
-                    //             .enumerate()
-                    //             .fold(0u32, |acc, (i, item)| acc
-                    //                 + (*item as u32) * 10u32.pow(i as u32))
-                    //     ),
-                    //     Instant::now(),
-                    // )),
-                    KeyBranch::Branches(b) => log(b),
-                }),
+            _ => (),
         };
+        ctx.editor
+            .keymap_controller
+            .compute_key(event.code)
+            .ok()
+            .flatten()
+            .and_then(|result| match result {
+                KeyBranch::Command { command, set_arg } => Some((command, set_arg)),
+                KeyBranch::Branches(_) => None,
+            })
+            .map(|(result, args)| {
+                let times = args.unwrap_or(1);
+                match result.as_str() {
+                    "delete" if ctx.editor.mode == Mode::Insert => {
+                        self.cursor.x = self.cursor.x.saturating_sub(1);
+                        let _ = self.content.delete(self.cursor.x, self.cursor.y, 1);
+                    }
+                    "remove" if ctx.editor.mode == Mode::Insert => self.backspace(),
+                    "left" => self.horizontal(-(times as isize)),
+                    "right" => self.horizontal(times as isize),
+                    "up" => self.scroll(-(times as isize)),
+                    "down" => self.scroll(times as isize),
+                    "end_line" => {
+                        self.horizontal(self.content.line_len(self.cursor.y) as isize);
+                        self.cursor_extend = usize::MAX;
+                    }
+                    "start_line" => {
+                        self.cursor.x = 0;
+                        self.cursor_extend = 0;
+                    }
+                    _ => ctx.compute_command(result),
+                };
+            });
         self.buffer = None;
         Some((self.cursor.x as u16, (self.cursor.y - self.scroll) as u16))
     }
@@ -137,6 +136,7 @@ impl Buffer {
             .x
             .saturating_add_signed(n)
             .min(self.content.line_len(self.cursor.y) - 1);
+        self.cursor_extend = self.cursor_extend.min(self.cursor.x);
     }
 
     pub fn scroll(&mut self, n: isize) {
@@ -145,7 +145,12 @@ impl Buffer {
             .y
             .saturating_add_signed(n)
             .clamp(0, self.content.len_lines() - 2);
-        self.cursor.x = self.cursor.x.min(self.content.line_len(self.cursor.y));
+
+        self.cursor.x = self
+            .cursor
+            .x
+            .max(self.cursor_extend)
+            .min(self.content.line_len(self.cursor.y) - 1);
 
         if let Some(rect) = self.last_rect {
             let height = rect.height as usize;

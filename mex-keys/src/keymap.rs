@@ -49,17 +49,18 @@ impl ToString for KeyOption {
 #[derive(Debug, Clone, PartialEq)]
 pub enum KeyBranch {
     Branches(HashMap<KeyOption, KeyBranch>),
-    Command(String),
+    Command {
+        command: String,
+        set_arg: Option<usize>,
+    },
 }
 
-pub fn get_unsafe(kb: &KeyBranch) -> &HashMap<KeyOption, KeyBranch> {
-    match kb {
-        KeyBranch::Branches(branch_ref) => branch_ref,
-        KeyBranch::Command(_) => panic!("Core KeyMap can not be a Command"),
-    }
-}
-
-pub fn add_kb(keymap: KeyBranch, path: &[KeyOption], command: String) -> KeyBranch {
+pub fn add_kb(
+    keymap: KeyBranch,
+    path: &[KeyOption],
+    command: String,
+    set_arg: Option<usize>,
+) -> KeyBranch {
     let (current_key, rest_of_path) = match path.split_first() {
         Some((key, rest)) => (key.clone(), rest),
         None => return keymap,
@@ -67,17 +68,17 @@ pub fn add_kb(keymap: KeyBranch, path: &[KeyOption], command: String) -> KeyBran
 
     let mut inner_map = match keymap {
         KeyBranch::Branches(map) => map,
-        KeyBranch::Command(_) => HashMap::new(),
+        KeyBranch::Command { .. } => HashMap::new(),
     };
 
     if rest_of_path.is_empty() {
-        inner_map.insert(current_key, KeyBranch::Command(command));
+        inner_map.insert(current_key, KeyBranch::Command { command, set_arg });
     } else {
         let next_branch = inner_map
             .remove(&current_key)
             .unwrap_or_else(|| KeyBranch::Branches(HashMap::new()));
 
-        let modified_next_branch = add_kb(next_branch, rest_of_path, command);
+        let modified_next_branch = add_kb(next_branch, rest_of_path, command, set_arg);
 
         inner_map.insert(current_key, modified_next_branch);
     }
@@ -90,8 +91,8 @@ pub struct KeyMap(pub HashMap<Mode, KeyBranch>);
 #[derive(Deserialize, Debug)]
 struct CommandConfig {
     mode: String,
-    keys: String,
-    _multi_keys: Option<Vec<String>>,
+    keys: Vec<String>,
+    set_args: Option<Vec<usize>>,
 }
 
 impl KeyMap {
@@ -101,27 +102,42 @@ impl KeyMap {
 
         let mut hm: HashMap<Mode, KeyBranch> = HashMap::new();
         for (command, config) in config_hashmap.iter() {
-            let key_seq = &Self::seperate(config.keys.clone());
-            for mode_char in config.mode.split_whitespace().collect::<String>().chars() {
-                let mode = match mode_char {
-                    'i' => Mode::Insert,
-                    's' => Mode::Select,
-                    _ => Mode::Normal,
-                };
-                hm.get_mut(&mode)
-                    .map(|kb| *kb = add_kb(kb.clone(), &key_seq, command.to_string()))
-                    .or_else(|| {
-                        Some({
-                            hm.insert(
-                                mode,
-                                add_kb(
-                                    KeyBranch::Branches(HashMap::new()),
-                                    &key_seq,
-                                    command.clone(),
-                                ),
-                            );
+            let set_args = config.set_args.clone().unwrap_or_default();
+            assert!(config.keys.len() >= set_args.len());
+            for (idx, keys) in config.keys.iter().enumerate() {
+                let key_seq = &Self::seperate(keys.clone());
+                for mode_char in config.mode.split_whitespace().collect::<String>().chars() {
+                    let mode = match mode_char {
+                        'i' => Mode::Insert,
+                        's' => Mode::Select,
+                        'n' => Mode::Normal,
+                        'r' => Mode::Replace,
+                        'm' => Mode::MultiInsert,
+                        mode => panic!("No '{mode}'-Mode"),
+                    };
+                    hm.get_mut(&mode)
+                        .map(|kb| {
+                            *kb = add_kb(
+                                kb.clone(),
+                                &key_seq,
+                                command.to_string(),
+                                set_args.get(idx).cloned(),
+                            )
                         })
-                    });
+                        .or_else(|| {
+                            Some({
+                                hm.insert(
+                                    mode,
+                                    add_kb(
+                                        KeyBranch::Branches(HashMap::new()),
+                                        &key_seq,
+                                        command.clone(),
+                                        set_args.get(idx).cloned(),
+                                    ),
+                                );
+                            })
+                        });
+                }
             }
         }
 

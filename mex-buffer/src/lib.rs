@@ -1,6 +1,7 @@
 use std::{fs::File, io::BufReader, ops::Range};
 
 use anyhow::Result;
+use mex_core::log_self;
 use ropey::{Rope, RopeSlice};
 
 pub struct RopeComponent {
@@ -80,11 +81,7 @@ impl RopeComponent {
         self.rope.len_lines()
     }
     pub fn line_len(&self, y: usize) -> usize {
-        if y == 0 {
-            self.rope.line_to_byte(y)
-        } else {
-            self.rope.line_to_byte(y) - self.rope.line_to_byte(y - 1)
-        }
+        self.rope.line_to_byte(y + 1) - if y != 0 { self.rope.line_to_byte(y) } else { 0 }
     }
 }
 

@@ -13,7 +13,6 @@ pub struct Editor {
     pub keymap_controller: KeyMapWrapper,
     pub settings: Settings,
     pub mode: Mode,
-    pub exit: bool,
     pub messages: Vec<(String, Instant)>,
     pub last_cursor_pos: Option<(u16, u16)>,
 }
@@ -26,7 +25,6 @@ impl Editor {
             settings: Settings {},
             mode: Mode::Normal,
             messages: vec![],
-            exit: false,
             last_cursor_pos: None,
         })
     }
@@ -34,6 +32,7 @@ impl Editor {
 
 pub struct Context<'a> {
     pub editor: &'a mut Editor,
+    pub exit: &'a mut bool,
 }
 
 impl<'a> Context<'a> {
@@ -42,6 +41,7 @@ impl<'a> Context<'a> {
             "mode-i" => self.editor.mode = Mode::Insert,
             "mode-n" => self.editor.mode = Mode::Normal,
             "mode-s" => self.editor.mode = Mode::Select,
+            "quit" => *self.exit = true,
             _ => (),
         }
     }

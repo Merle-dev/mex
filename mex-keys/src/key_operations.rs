@@ -30,20 +30,6 @@ pub fn to_key(key_str: String) -> Option<KeyOption> {
         "keypadbegin" => Some(KeyOption::Specific(KeyCode::KeypadBegin)),
         " " | "space" => Some(KeyOption::Specific(KeyCode::Char(' '))),
 
-        // Function keys
-        "f1" => Some(KeyOption::Specific(KeyCode::F(1))),
-        "f2" => Some(KeyOption::Specific(KeyCode::F(2))),
-        "f3" => Some(KeyOption::Specific(KeyCode::F(3))),
-        "f4" => Some(KeyOption::Specific(KeyCode::F(4))),
-        "f5" => Some(KeyOption::Specific(KeyCode::F(5))),
-        "f6" => Some(KeyOption::Specific(KeyCode::F(6))),
-        "f7" => Some(KeyOption::Specific(KeyCode::F(7))),
-        "f8" => Some(KeyOption::Specific(KeyCode::F(8))),
-        "f9" => Some(KeyOption::Specific(KeyCode::F(9))),
-        "f10" => Some(KeyOption::Specific(KeyCode::F(10))),
-        "f11" => Some(KeyOption::Specific(KeyCode::F(11))),
-        "f12" => Some(KeyOption::Specific(KeyCode::F(12))),
-
         // Media keys
         "play" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Play))),
         "pause_media" => Some(KeyOption::Specific(KeyCode::Media(MediaKeyCode::Pause))),
@@ -112,6 +98,9 @@ pub fn to_key(key_str: String) -> Option<KeyOption> {
         "isoLevel5Shift" => Some(KeyOption::Specific(KeyCode::Modifier(
             ModifierKeyCode::IsoLevel5Shift,
         ))),
+        f if f.starts_with('f') && f[1..].parse::<u8>().is_ok() => Some(KeyOption::Specific(
+            KeyCode::F(f[1..].parse::<u8>().unwrap()),
+        )),
         s if s.len() == 1 => Some(KeyOption::Specific(KeyCode::Char(
             s.chars().next().unwrap(),
         ))),

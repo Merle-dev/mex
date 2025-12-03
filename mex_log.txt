@@ -1,36 +1,830 @@
-{
-    Num: Branches(
-        {
-            Specific(
-                Char(
-                    'p',
-                ),
-            ): Command(
-                "print",
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-i",
+    set_arg: None,
+}
+
+
+Branches(
+    {
+        Num: Branches(
+            {
+                Specific(
+                    Char(
+                        'p',
+                    ),
+                ): Command {
+                    command: "print",
+                    set_arg: None,
+                },
+            },
+        ),
+        Specific(
+            Char(
+                'q',
             ),
-            Specific(
-                Char(
-                    'x',
-                ),
-            ): Command(
-                "remove",
-            ),
+        ): Command {
+            command: "quit",
+            set_arg: None,
         },
-    ),
-    Specific(
-        Char(
-            'c',
+    },
+)
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "left",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-i",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-i",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Branches(
+    {
+        Num: Branches(
+            {
+                Specific(
+                    Char(
+                        'p',
+                    ),
+                ): Command {
+                    command: "print",
+                    set_arg: None,
+                },
+            },
         ),
-    ): Command(
-        "quit",
-    ),
-    Specific(
-        Char(
-            's',
+        Specific(
+            Char(
+                'q',
+            ),
+        ): Command {
+            command: "quit",
+            set_arg: None,
+        },
+    },
+)
+
+
+Branches(
+    {
+        Num: Branches(
+            {
+                Specific(
+                    Char(
+                        'p',
+                    ),
+                ): Command {
+                    command: "print",
+                    set_arg: None,
+                },
+            },
         ),
-    ): Command(
-        "save",
-    ),
+        Specific(
+            Char(
+                'q',
+            ),
+        ): Command {
+            command: "quit",
+            set_arg: None,
+        },
+    },
+)
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "down",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "up",
+    set_arg: None,
+}
+
+
+Command {
+    command: "left",
+    set_arg: None,
+}
+
+
+Command {
+    command: "left",
+    set_arg: None,
+}
+
+
+Command {
+    command: "left",
+    set_arg: None,
+}
+
+
+Command {
+    command: "left",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Branches(
+    {
+        Num: Branches(
+            {
+                Specific(
+                    Char(
+                        'p',
+                    ),
+                ): Command {
+                    command: "print",
+                    set_arg: None,
+                },
+            },
+        ),
+        Specific(
+            Char(
+                'q',
+            ),
+        ): Command {
+            command: "quit",
+            set_arg: None,
+        },
+    },
+)
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-i",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "right",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "mode-s",
+    set_arg: None,
+}
+
+
+Command {
+    command: "delete",
+    set_arg: None,
+}
+
+
+Command {
+    command: "delete",
+    set_arg: None,
+}
+
+
+Command {
+    command: "delete",
+    set_arg: None,
 }
 
 

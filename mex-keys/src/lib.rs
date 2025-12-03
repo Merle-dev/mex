@@ -1,7 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
 use anyhow::{Result, anyhow};
-use mex_core::Mode;
+use mex_core::{Mode, log, log_self};
 use ratatui::crossterm::event::KeyCode;
 
 mod key_operations;
@@ -23,7 +23,7 @@ impl KeyMapWrapper {
             .cloned()
             .and_then(|branch| match branch {
                 KeyBranch::Branches(hm) => Some(hm),
-                KeyBranch::Command(_) => None,
+                KeyBranch::Command { .. } => None,
             })
             .ok_or(anyhow!("Somehow there are no normal mode implementation"))?;
         Ok(Self {
@@ -39,58 +39,71 @@ impl KeyMapWrapper {
             .get(&Mode::Normal)
             .and_then(|branch| match branch {
                 KeyBranch::Branches(hm) => Some(hm),
-                KeyBranch::Command(_) => None,
+                KeyBranch::Command { .. } => None,
             })
             .cloned()
-            .ok_or(anyhow!("Somehow there are no normal mode implementation"))?;
+            .ok_or(anyhow!("Somehow there is no normal mode implementation"))?;
         Ok(())
     }
     fn after_care(&mut self, branch: &KeyBranch) -> Result<()> {
         match branch {
             KeyBranch::Branches(new_hm) => self.current = new_hm.clone(),
-            KeyBranch::Command(_) => self.return_to_base()?,
+            KeyBranch::Command { .. } => self.return_to_base()?,
         };
         Ok(())
     }
-    pub fn compute_key(&mut self, key: KeyCode) -> Result<Option<(KeyBranch, Rc<[u8]>)>> {
-        let empty = || -> Rc<[u8]> { Rc::new([]) };
+
+    ///
+    /// Wonky function i would need to cry if
+    /// I had to rewrite this function but I
+    /// don't now how to make it better
+    ///
+
+    pub fn compute_key(&mut self, key: KeyCode) -> Result<Option<KeyBranch>> {
         match key {
             KeyCode::Char(char) if (48..=57).contains(&(char as u8)) => {
                 Ok(self.current.get(&KeyOption::Num).map(|_| {
                     self.stored_nums.push(char as u8 - 48);
-                    (KeyBranch::Branches(self.current.clone()), empty())
+                    KeyBranch::Branches(self.current.clone())
                 }))
             }
             other => self
                 .current
                 .get(&KeyOption::Specific(other))
-                .map(|branch| {
-                    let buf: Rc<[u8]> = match branch {
-                        KeyBranch::Branches(_) => empty(),
-                        KeyBranch::Command(_) => {
-                            Rc::from(std::mem::take(&mut self.stored_nums).into_boxed_slice())
-                        }
-                    };
-                    (branch.clone(), buf)
-                })
-                .map(|result| self.after_care(&result.0).map(|_| result))
+                .cloned()
+                .inspect(|a| log(a))
+                .map(|result| self.after_care(&result).map(|_| result))
                 .or_else(|| {
                     self.current
                         .get(&KeyOption::Num)
                         .and_then(|result| match result {
                             KeyBranch::Branches(hm) => hm.get(&KeyOption::Specific(other)),
-                            KeyBranch::Command(_) => None,
+                            KeyBranch::Command { .. } => None,
                         })
-                        .map(|branch| {
-                            let buf = match branch {
-                                KeyBranch::Branches(_) => empty(),
-                                KeyBranch::Command(_) => Rc::from(
-                                    std::mem::take(&mut self.stored_nums).into_boxed_slice(),
-                                ),
-                            };
-                            (branch.clone(), buf)
+                        .map(|branch| match branch {
+                            KeyBranch::Branches(_) => branch.clone(),
+                            KeyBranch::Command { command, set_arg } => {
+                                let arg = set_arg.unwrap_or({
+                                    self.stored_nums.iter().rev().enumerate().fold(
+                                        0usize,
+                                        |acc, (exponent, factor)| {
+                                            acc + *factor as usize * 10usize.pow(exponent as u32)
+                                        },
+                                    )
+                                });
+                                self.stored_nums.clear();
+                                KeyBranch::Command {
+                                    command: command.clone(),
+                                    set_arg: Some(arg),
+                                }
+                            }
                         })
-                        .map(|result| self.after_care(&result.0).map(|_| result))
+                        .map(|result| self.after_care(&result).map(|_| result))
+                        .or_else(|| {
+                            self.return_to_base()
+                                .map(|_| self.base.0.get(&Mode::Normal).cloned())
+                                .transpose()
+                        })
                 })
                 .transpose(),
         }
