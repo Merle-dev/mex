@@ -4,7 +4,7 @@ use anyhow::Result;
 use ropey::{Rope, RopeSlice};
 
 pub struct RopeComponent {
-    rope: Rope,
+    pub rope: Rope,
 }
 
 pub enum RopeInsert {
@@ -65,7 +65,6 @@ impl RopeComponent {
         (index < self.rope.len_bytes()).then(|| self.rope.byte(index) as char)
     }
     pub fn lines(&self, range: Range<usize>) -> Option<RopeSlice<'_>> {
-        // range.map(|index| self.rope.line(index)).flatten()
         let start = self.rope.try_line_to_byte(range.start).ok()?;
         let end = self
             .rope
@@ -74,8 +73,18 @@ impl RopeComponent {
             .unwrap_or(self.rope.len_bytes());
         self.rope.get_slice(start..end)
     }
+    pub fn xy_to_index(&self, x: usize, y: usize) -> Option<usize> {
+        Some(self.rope.try_line_to_byte(y).ok()? + x)
+    }
     pub fn len_lines(&self) -> usize {
         self.rope.len_lines()
+    }
+    pub fn line_len(&self, y: usize) -> usize {
+        if y == 0 {
+            self.rope.line_to_byte(y)
+        } else {
+            self.rope.line_to_byte(y) - self.rope.line_to_byte(y - 1)
+        }
     }
 }
 

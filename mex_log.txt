@@ -1,1 +1,36 @@
+{
+    Num: Branches(
+        {
+            Specific(
+                Char(
+                    'p',
+                ),
+            ): Command(
+                "print",
+            ),
+            Specific(
+                Char(
+                    'x',
+                ),
+            ): Command(
+                "remove",
+            ),
+        },
+    ),
+    Specific(
+        Char(
+            'c',
+        ),
+    ): Command(
+        "quit",
+    ),
+    Specific(
+        Char(
+            's',
+        ),
+    ): Command(
+        "save",
+    ),
+}
+
 

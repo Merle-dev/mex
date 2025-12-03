@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use crate::Element;
 use anyhow::Result;
 use mex_buffer::RopeComponent;
@@ -8,13 +6,13 @@ use mex_keys::KeyBranch;
 use ratatui::{
     crossterm::event::KeyCode,
     layout::Rect,
-    style::Stylize,
-    widgets::{List, Paragraph, Widget},
+    widgets::{List, Widget},
 };
 
 pub struct Buffer {
     content: RopeComponent,
     cursor: FilePosition,
+    cursor_extend: usize,
     last_rect: Option<Rect>,
     buffer: Option<Vec<String>>,
     scroll: usize,
@@ -43,26 +41,7 @@ impl Element for Buffer {
                 buffer.unwrap_or(vec![])
             }
         })
-        .on_black()
         .render(area, buffer);
-        Paragraph::new(format!(
-            "{:?}|{}|{}|{}",
-            self.cursor.y,
-            self.scroll,
-            self.content.len_lines(),
-            self.cursor
-                .y
-                .saturating_sub((area.height as usize).saturating_sub(Self::BORDER_SPACING)),
-        ))
-        .render(
-            Rect {
-                x: 120,
-                y: 20,
-                width: 50,
-                height: 1,
-            },
-            buffer,
-        );
     }
     fn captures_input(&self) -> bool {
         true
@@ -75,33 +54,23 @@ impl Element for Buffer {
         match event.code {
             KeyCode::Delete if ctx.editor.mode == Mode::Insert => {
                 self.cursor.x = self.cursor.x.saturating_sub(1);
-                self.content
-                    .delete(self.cursor.x, self.cursor.y, 1)
-                    .unwrap();
+                let _ = self.content.delete(self.cursor.x, self.cursor.y, 1);
             }
             KeyCode::Delete => ctx.editor.exit = true,
-            KeyCode::Backspace if ctx.editor.mode == Mode::Insert => {
-                self.cursor.x = self.cursor.x.saturating_sub(1);
-                self.content
-                    .delete(self.cursor.x, self.cursor.y, 1)
-                    .unwrap();
-            }
+            KeyCode::Backspace if ctx.editor.mode == Mode::Insert => self.backspace(),
             KeyCode::Char(char) if ctx.editor.mode == Mode::Insert => {
                 self.content
                     .insert(self.cursor.x, self.cursor.y, char)
                     .unwrap();
                 self.cursor.x += 1;
             }
-            KeyCode::Left => {
-                self.cursor.x = self.cursor.x.saturating_sub(1);
-            }
-            KeyCode::Right => {
-                self.cursor.x += 1;
-            }
+            KeyCode::Left => self.horizontal(-1),
+            KeyCode::Right => self.horizontal(1),
             KeyCode::Up => self.scroll(-1),
             KeyCode::Down => self.scroll(1),
             KeyCode::PageUp => self.scroll(-5),
             KeyCode::PageDown => self.scroll(5),
+            KeyCode::End => self.horizontal(self.content.line_len(self.cursor.y) as isize),
             other => ctx
                 .editor
                 .keymap_controller
@@ -143,17 +112,40 @@ impl Buffer {
         Ok(Self {
             content: RopeComponent::new(file)?,
             cursor: FilePosition { x: 0, y: 0 },
+            cursor_extend: 0,
             last_rect: None,
             buffer: None,
             scroll: 0,
         })
     }
+    pub fn backspace(&mut self) {
+        let len = self.content.line_len(self.cursor.y);
+        self.content
+            .xy_to_index(self.cursor.x, self.cursor.y)
+            .map(|index| index - 1)
+            .map(|index| self.content.rope.try_remove(index..index + 1));
+        if self.cursor.x != 0 {
+            self.cursor.x -= 1;
+        } else if self.cursor.y != 0 {
+            self.cursor.x = len - 1;
+            self.cursor.y -= 1;
+        }
+    }
+    pub fn horizontal(&mut self, n: isize) {
+        self.cursor.x = self
+            .cursor
+            .x
+            .saturating_add_signed(n)
+            .min(self.content.line_len(self.cursor.y) - 1);
+    }
+
     pub fn scroll(&mut self, n: isize) {
         self.cursor.y = self
             .cursor
             .y
             .saturating_add_signed(n)
             .clamp(0, self.content.len_lines() - 2);
+        self.cursor.x = self.cursor.x.min(self.content.line_len(self.cursor.y));
 
         if let Some(rect) = self.last_rect {
             let height = rect.height as usize;
